@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('../public/thmanyah.woff2'); /* Vite serves files in public/ from the root '/' */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; 
+}
+
+@theme {
+  --font-custom: 'MyCustomFont', sans-serif;
+}

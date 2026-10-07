@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('../public/AlanSans-VariableFont_wght.ttf') ;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap; 
+}
+
+
+@theme {
+  --font-custom: 'MyCustomFont', sans-serif;
+}
