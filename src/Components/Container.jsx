@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import Row from "./Row"
 import Keyboard from "./Keyboard"
-import wordsCsv from "../../data/correct_words.csv?raw"
+import wordsCsv from "../../data/words.csv?raw"
 
-// Each word's id is its position in data/correct_words.csv (0 = first word after the header).
+// Each word's id is its position in data/words.csv (0 = first word after the header).
 const WORDS = wordsCsv
     .split(/\r?\n/)
     .slice(1)
@@ -11,10 +11,10 @@ const WORDS = wordsCsv
     .filter(Boolean)
     .map((word, id) => ({ id, word }));
 
-// Normalised answers, used to validate guesses until the full guess list loads.
+// Normalised word list, used to check that a guess is a real word.
 const ANSWER_SET = new Set(WORDS.map((w) => normalize(w.word)));
 
-const PASSED_KEY = "passedWordIds";
+const PASSED_KEY = "passedWordIds_v2"; // v2 = ids in data/words.csv
 
 function getPassedIds(){
     try {
@@ -109,16 +109,6 @@ export default function Container(){
     const [current, setCurrent] = useState("");     // what the player is typing now
     const [status, setStatus] = useState("playing"); // "playing" | "won" | "lost"
     const [notice, setNotice] = useState("");        // short message, e.g. word not in list
-    const [allowedWords, setAllowedWords] = useState(null);
-
-    // Load the full list of accepted guesses in the background (it's large, so it's a separate chunk).
-    useEffect(() => {
-        import("../../data/allowed_guesses.csv?raw").then(({ default: csv }) => {
-            const words = csv.split(/\r?\n/).slice(1).map((w) => normalize(w.trim())).filter(Boolean);
-            setAllowedWords(new Set(words));
-        });
-    }, []);
-
     // Hide the notice after a moment.
     useEffect(() => {
         if (!notice) return;
@@ -127,9 +117,7 @@ export default function Container(){
     }, [notice]);
 
     function isValidGuess(word){
-        const normalized = normalize(word);
-        // Until the big list has loaded, fall back to the answer list.
-        return allowedWords ? allowedWords.has(normalized) : ANSWER_SET.has(normalized);
+        return ANSWER_SET.has(normalize(word));
     }
 
     function submitGuess(){
