@@ -155,6 +155,9 @@ export default function Container(){
     }
 
     // Shared by the physical keyboard and the on-screen keyboard.
+    // Best known result for each letter so far (used to colour and lock keys).
+    const letterStatuses = getLetterStatuses(guesses, target.word);
+
     function handleKey(key){
         if (status !== "playing") return;
 
@@ -163,6 +166,11 @@ export default function Container(){
         } else if (key === "Backspace") {
             setCurrent((c) => [...c].slice(0, -1).join(""));
         } else if (ARABIC_LETTER.test(key)) {
+            // Letters already shown grey are not in the word, so they can't be typed again.
+            if (letterStatuses[normalize(key)] === "absent") {
+                setNotice(`الحرف «${key}» غير موجود في الكلمة`);
+                return;
+            }
             setCurrent((c) => ([...c].length < WORD_LENGTH ? c + key : c));
         }
     }
@@ -183,36 +191,39 @@ export default function Container(){
     while (rows.length < MAX_TRIES) rows.push({ text: "", statuses: [] });
 
     return(
-        <div className="flex flex-col items-center gap-4 w-full">
-            <div className=" rounded-3xl w-90 h-106 flex-col bg-mist-900">
+        // Phone: board on top, keyboard underneath. Desktop: keyboard to the right of the board.
+        <div className="flex flex-col md:flex-row-reverse items-center justify-center gap-6 lg:gap-10 w-full pb-6">
+            <div className=" rounded-3xl w-90 h-106 flex-col bg-mist-900 shrink-0">
                 {rows.map((row, i) => (
                     <Row key={i} {...toRowProps(row.text)} statuses={row.statuses} />
                 ))}
             </div>
 
-            {notice && (
-                <p className="text-white text-xl font-custom bg-neutral-700 rounded-xl px-4 py-1">{notice}</p>
-            )}
-            {status === "won" && (
-                <p className="text-white text-2xl font-custom">أحسنت! الكلمة صحيحة 🎉</p>
-            )}
-            {status === "lost" && (
-                <p className="text-white text-2xl font-custom">انتهت المحاولات، الكلمة كانت: {target.word}</p>
-            )}
-            {status !== "playing" && (
-                <button
-                    onClick={() => window.location.reload()}
-                    className="text-white text-xl font-custom bg-mist-900 hover:bg-mist-800 rounded-2xl px-6 py-2 duration-200"
-                >
-                    كلمة جديدة
-                </button>
-            )}
+            <div className="flex flex-col items-center gap-4 w-full max-w-md md:max-w-sm lg:max-w-md">
+                {notice && (
+                    <p className="text-white text-xl font-custom bg-neutral-700 rounded-xl px-4 py-1">{notice}</p>
+                )}
+                {status === "won" && (
+                    <p className="text-white text-2xl font-custom">أحسنت! الكلمة صحيحة 🎉</p>
+                )}
+                {status === "lost" && (
+                    <p className="text-white text-2xl font-custom text-center">انتهت المحاولات، الكلمة كانت: {target.word}</p>
+                )}
+                {status !== "playing" && (
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="text-white text-xl font-custom bg-mist-900 hover:bg-mist-800 rounded-2xl px-6 py-2 duration-200"
+                    >
+                        كلمة جديدة
+                    </button>
+                )}
 
-            <Keyboard
-                onKey={handleKey}
-                letterStatuses={getLetterStatuses(guesses, target.word)}
-                normalize={normalize}
-            />
+                <Keyboard
+                    onKey={handleKey}
+                    letterStatuses={letterStatuses}
+                    normalize={normalize}
+                />
+            </div>
         </div>
     );
 }
